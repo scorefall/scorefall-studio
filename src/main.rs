@@ -2,7 +2,8 @@ use fon::stereo::Stereo32;
 use fon::{Audio, Sink};
 use pasts::{block_on, wait};
 use semtext::input::Action;
-use semtext::widget::Label;
+use semtext::text::{Color, Corner, Intensity, Outline, Stroke, Theme};
+use semtext::widget::{BorderStyle, Label};
 use semtext::{grid_area, Error, Screen};
 use wavy::{Microphone, MicrophoneStream, Speakers, SpeakersSink};
 
@@ -51,6 +52,19 @@ fn main() {
     let mut microphone = Microphone::default();
     let mut screen = Screen::new().unwrap();
     screen.set_title("ScoreFall Studio").unwrap();
+    screen.set_theme(Theme {
+        background: Color::Black(Intensity::Normal),
+        foreground: Color::White(Intensity::Normal),
+        primary: Color::White(Intensity::Bright),
+        focused: Color::Blue(Intensity::Normal),
+        interacting: Color::Green(Intensity::Normal),
+        dark_shadow: Color::Black(Intensity::Bright),
+        light_shadow: Color::White(Intensity::Normal),
+        enabled_border: BorderStyle::Simple(Outline::Light(Stroke::Solid, Corner::Rounded)),
+        disabled_border: BorderStyle::Simple(Outline::Light(Stroke::Solid, Corner::Rounded)),
+        button_released_border: BorderStyle::Simple(Outline::Light(Stroke::Solid, Corner::Rounded)),
+        button_pressed_border: BorderStyle::Simple(Outline::Light(Stroke::Solid, Corner::Rounded)),
+    });
 
     block_on(async move {
         let a = Label::new("ScoreFall Studio");
