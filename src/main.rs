@@ -4,7 +4,7 @@ use fon::stereo::Stereo32;
 use fon::{Audio, Frame, Sink};
 use pasts::{block_on, wait};
 use semtext::input::Action;
-use semtext::layout::{AreaBound, Cells};
+use semtext::layout::{Cells, Pos};
 use semtext::text::{Color, Corner, Intensity, Outline, Stroke, Theme, TextStyle};
 use semtext::widget::{BorderStyle, Label};
 use semtext::{grid_area, Error, Screen, Widget};
@@ -140,16 +140,16 @@ impl AudioTracks {
 }
 
 impl Widget for AudioTracks {
-    fn bounds(&self, theme: &Theme) -> AreaBound {
+    /*fn bounds(&self, theme: &Theme) -> () {
         let row = ((self.channels * 8) + (self.channels - 1)) as u16;
         let col = (self.len as f32 * self.zoom).ceil() as u16;
 
-        AreaBound::default()
+/*        ()::default()
             .with_columns(col..col + 1)
-            .with_rows(row..row + 1)
-    }
+            .with_rows(row..row + 1)*/
+    }*/
 
-    fn draw(&self, cells: &mut Cells<'_>) -> Result<(), Error> {
+    fn draw(&self, cells: &mut Cells<'_>, pos: Pos) -> Result<(), Error> {
         let mut row = 0i32;
         for track in &self.tracks {
             for col in 0..(self.len as f32 * self.zoom).ceil() as u16 {
@@ -216,10 +216,8 @@ fn main() {
         interacting: Color::Green(Intensity::Normal),
         dark_shadow: Color::Black(Intensity::Bright),
         light_shadow: Color::White(Intensity::Normal),
-        enabled_border: BorderStyle::Simple(Outline::Light(Stroke::Solid, Corner::Rounded)),
-        disabled_border: BorderStyle::Simple(Outline::Light(Stroke::Solid, Corner::Rounded)),
-        button_released_border: BorderStyle::Simple(Outline::Light(Stroke::Solid, Corner::Rounded)),
-        button_pressed_border: BorderStyle::Simple(Outline::Light(Stroke::Solid, Corner::Rounded)),
+        button_border: BorderStyle::Simple(Outline::Light(Stroke::Solid, Corner::Rounded)),
+        normal_border: BorderStyle::Simple(Outline::Light(Stroke::Solid, Corner::Rounded)),
     });
 
     block_on(async move {

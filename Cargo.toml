@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 pasts = "0.7"
-wavy = "0.8"
-fon = "0.4"
+wavy = "0.9"
+fon = "0.5"
 ebur128 = "0.1"
 semtext = { path = "../semtext" }
