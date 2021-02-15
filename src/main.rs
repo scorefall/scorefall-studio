@@ -4,11 +4,15 @@ use fon::stereo::Stereo32;
 use fon::{Audio, Frame, Sink};
 use pasts::{block_on, wait};
 use semtext::input::Action;
-use semtext::layout::{Cells, Pos};
+use semtext::layout::{Cells, Pos, LengthBound};
 use semtext::text::{Color, Corner, Intensity, Outline, Stroke, Theme, TextStyle};
-use semtext::widget::{BorderStyle, Label};
+use semtext::widget::{BorderStyle, Label, ScrollView, ScrollBar};
 use semtext::{grid_area, Error, Screen, Widget};
 use wavy::{Microphone, MicrophoneStream, Speakers, SpeakersSink};
+
+mod sma;
+
+use sma::Sma;
 
 /// An event handled by the event loop.
 enum Event<'a> {
@@ -32,14 +36,18 @@ enum Track {
 struct State {
     /// Master gain
     gain: Ch32,
+    /// The part of the file that's loaded into RAM.
+    file: Sma,
+    ///
+    buffer: Audio<Stereo32>,
 }
 
 impl State {
     /// Event loop.
     fn event(&mut self, event: Event<'_>) -> bool {
         match event {
-            Event::Play(mut speakers) => {} /*speakers.stream(self.buffer.drain())*/
-            Event::Record(_microphone) => {} /*self.buffer.extend(microphone)*/
+            Event::Play(mut speakers) => {} // speakers.stream(self.buffer.drain()),
+            Event::Record(microphone) => {} // self.buffer.extend(microphone),
             Event::Action(action) => return self.action(action.unwrap()),
         }
         true
@@ -140,14 +148,15 @@ impl AudioTracks {
 }
 
 impl Widget for AudioTracks {
-    /*fn bounds(&self, theme: &Theme) -> () {
-        let row = ((self.channels * 8) + (self.channels - 1)) as u16;
+    fn width_bounds(&self, _: &Theme) -> LengthBound {
         let col = (self.len as f32 * self.zoom).ceil() as u16;
+        LengthBound::new(col..col + 1)
+    }
 
-/*        ()::default()
-            .with_columns(col..col + 1)
-            .with_rows(row..row + 1)*/
-    }*/
+    fn height_bounds(&self, _: &Theme, _width: u16) -> LengthBound {
+        let row = ((self.channels * 8) + (self.channels - 1)) as u16;
+        LengthBound::new(row..row + 1)
+    }
 
     fn draw(&self, cells: &mut Cells<'_>, pos: Pos) -> Result<(), Error> {
         let mut row = 0i32;
@@ -202,7 +211,8 @@ impl Widget for AudioTracks {
 fn main() {
     let mut state = State {
         gain: Ch32::new(1.0),
-        // buffer: Audio::with_silence(48_000, 0),
+        file: Sma {},
+        buffer: Audio::with_silence(48_000, 0),
     };
     let mut speakers = Speakers::default();
     let mut microphone = Microphone::default();
@@ -231,13 +241,20 @@ fn main() {
             len: 5,
             channels: 1,
         };
+        let tracks = tracks.into_scroll_view();
+        // let tracks = ScrollView::new(tracks)
+        //    .with_bars(ScrollBar::VerticalAndHorizontal(5, 5));
 
         let grid = grid_area!([a][tracks]).unwrap();
+
+        let mut log = "".to_string();
 
         while state.event(wait! {
             Event::Record(microphone.record().await),
             Event::Play(speakers.play().await),
             Event::Action(screen.step(&grid).await),
         }) {}
+
+        println!("{}", log);
     });
 }

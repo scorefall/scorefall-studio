@@ -12,3 +12,8 @@ wavy = "0.9"
 fon = "0.5"
 ebur128 = "0.1"
 semtext = { path = "../semtext" }
+
+[dependencies.zip]
+version = "0.5"
+default-features = false
+features = ["deflate"]
