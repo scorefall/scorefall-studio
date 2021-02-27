@@ -86,8 +86,10 @@ impl AudioTracks {
         
             let mut i = 0;
             while blocks >= 8 {
-                cells.move_to(col, (row + 3 - i) as u16)?;
-                cells.print_char('█')?;
+                if row + 3 - i >= 0 && row + 3 - i < cells.height() as i32 {
+                    cells.move_to(col, (row + 3 - i) as u16)?;
+                    cells.print_char('█')?;
+                }
                 blocks -= 8;
                 i += 1;
             }
@@ -103,8 +105,10 @@ impl AudioTracks {
                 _ => unreachable!(),
             };
             if let Some(symbol) = symbol {
-                cells.move_to(col, (row + 3 - i) as u16)?;
-                cells.print_char(symbol)?;
+                if row + 3 - i >= 0 && row + 3 - i < cells.height() as i32 {
+                    cells.move_to(col, (row + 3 - i) as u16)?;
+                    cells.print_char(symbol)?;
+                }
             }
         } else if blocks < 0 {
             cells.set_style(
@@ -115,8 +119,10 @@ impl AudioTracks {
         
             let mut i = 0;
             while blocks <= -8 {
-                cells.move_to(col, (row + 4 + i) as u16)?;
-                cells.print_char(' ')?;
+                if row + 4 + i >= 0 && row + 4 + i < cells.height() as i32 {
+                    cells.move_to(col, (row + 4 + i) as u16)?;
+                    cells.print_char(' ')?;
+                }
                 blocks += 8;
                 i += 1;
             }
@@ -132,8 +138,10 @@ impl AudioTracks {
                 _ => unreachable!(),
             };
             if let Some(symbol) = symbol {
-                cells.move_to(col, (row + 4 + i) as u16)?;
-                cells.print_char(symbol)?;
+                if row + 4 + i >= 0 && row + 4 + i < cells.height() as i32 {
+                    cells.move_to(col, (row + 4 + i) as u16)?;
+                    cells.print_char(symbol)?;
+                }
             }
         }
         
@@ -150,23 +158,26 @@ impl AudioTracks {
 impl Widget for AudioTracks {
     fn width_bounds(&self, _: &Theme) -> LengthBound {
         let col = (self.len as f32 * self.zoom).ceil() as u16;
-        LengthBound::new(col..col + 1)
+        LengthBound::new(col..)
     }
 
     fn height_bounds(&self, _: &Theme, _width: u16) -> LengthBound {
-        let row = ((self.channels * 8) + (self.channels)) as u16;
+        let row = (self.channels * 9 + 1) as u16;
         LengthBound::new(row..row + 1)
     }
 
     fn draw(&self, cells: &mut Cells<'_>, pos: Pos) -> Result<(), Error> {
-        let mut row = 0i32;
+        let mut row = 0i32 - pos.row as i32;
         for track in &self.tracks {
-            for col in 0..(self.len as f32 * self.zoom).ceil() as u16 {
-                cells.move_to(col, row as u16)?;
-                cells.print_char('━')?;
+            if row >= 0 && row < cells.height() as i32 {
+                for col in 0..(self.len as f32 * self.zoom).ceil() as u16 {
+                    cells.move_to(col - pos.col, row as u16)?;
+                    cells.print_char('━')?;
+                }
             }
             row += 1;
             for col in 0..(self.len as f32 * self.zoom).ceil() as u16 {
+                let col = col - pos.col;
                 match track {
                     Track::Mono(ref audio) => {
                         let sample: f32 = audio
@@ -188,8 +199,10 @@ impl Widget for AudioTracks {
                             .channels()[1]
                             .into();
                         self.draw_sample(cells, col, row, left)?;
-                        cells.move_to(col, (row + 8) as u16)?;
-                        cells.print_char('─')?;
+                        if row + 8 >= 0 && row + 8 < cells.height() as i32 {
+                            cells.move_to(col, (row + 8) as u16)?;
+                            cells.print_char('─')?;
+                        }
                         self.draw_sample(cells, col, row + 9, right)?;
                     }
                 }
@@ -199,9 +212,11 @@ impl Widget for AudioTracks {
                 Track::Stereo(_) => 17,
             };
         }
-        for col in 0..(self.len as f32 * self.zoom).ceil() as u16 {
-            cells.move_to(col, row as u16)?;
-            cells.print_char('━')?;
+        if row >= 0 && row < cells.height() as i32 {
+            for col in 0..(self.len as f32 * self.zoom).ceil() as u16 {
+                cells.move_to(col - pos.col, row as u16)?;
+                cells.print_char('━')?;
+            }
         }
         Ok(())
     }
