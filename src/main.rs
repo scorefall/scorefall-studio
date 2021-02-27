@@ -154,7 +154,7 @@ impl Widget for AudioTracks {
     }
 
     fn height_bounds(&self, _: &Theme, _width: u16) -> LengthBound {
-        let row = ((self.channels * 8) + (self.channels - 1)) as u16;
+        let row = ((self.channels * 8) + (self.channels)) as u16;
         LengthBound::new(row..row + 1)
     }
 
@@ -208,7 +208,7 @@ impl Widget for AudioTracks {
 }
 
 /// Program start.
-fn main() {
+async fn async_main() {
     let mut state = State {
         gain: Ch32::new(1.0),
         file: Sma {},
@@ -230,31 +230,32 @@ fn main() {
         normal_border: BorderStyle::Simple(Outline::Light(Stroke::Solid, Corner::Rounded)),
     });
 
-    block_on(async move {
-        let a = Label::new("ScoreFall Studio");
-        let tracks = AudioTracks {
-            zoom: 1.0,
-            tracks: vec![Track::Stereo(Audio::with_f32_buffer(
-                48_000,
-                [0.025, 1.0, -0.1, 0.9, 1.0, -1.0, 0.5, 0.5, -0.5, -0.5],
-            ))],
-            len: 5,
-            channels: 1,
-        };
-        let tracks = tracks.into_scroll_view();
-        // let tracks = ScrollView::new(tracks)
-        //    .with_bars(ScrollBar::VerticalAndHorizontal(5, 5));
+    let a = Label::new("ScoreFall Studio");
+    let tracks = AudioTracks {
+        zoom: 1.0,
+        tracks: vec![Track::Stereo(Audio::with_f32_buffer(
+            48_000,
+            [0.025, 1.0, -0.1, 0.9, 1.0, -1.0, 0.5, 0.5, -0.5, -0.5],
+        ))],
+        len: 5,
+        channels: 2,
+    };
 
-        let grid = grid_area!([a][tracks]).unwrap();
+    let tracks = tracks.into_scroll_view();
+    let grid = grid_area!([a][tracks]).unwrap();
 
-        let mut log = "".to_string();
+    let mut log = "".to_string();
 
-        while state.event(wait! {
-            Event::Record(microphone.record().await),
-            Event::Play(speakers.play().await),
-            Event::Action(screen.step(&grid).await),
-        }) {}
+    while state.event(wait! {
+        Event::Record(microphone.record().await),
+        Event::Play(speakers.play().await),
+        Event::Action(screen.step(&grid).await),
+    }) {}
 
-        println!("{}", log);
-    });
+    println!("{}", log);
+}
+
+/// Program start.
+fn main() {
+    block_on(async_main());
 }
